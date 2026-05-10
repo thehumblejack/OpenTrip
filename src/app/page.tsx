@@ -154,8 +154,8 @@ export default function Home() {
 
     try {
       // 2. Sync Activities
-      await supabase.from('activities').delete().eq('trip_id', tripData.id);
       if (trip.activities.length > 0) {
+        await supabase.from('activities').delete().eq('trip_id', tripData.id);
         const { error: actErr } = await supabase.from('activities').insert(
           trip.activities.map(item => {
             let parsedDate = null;
@@ -183,8 +183,8 @@ export default function Home() {
       }
 
       // 3. Sync Explorations
-      await supabase.from('explorations').delete().eq('trip_id', tripData.id);
       if (trip.customExplorations.length > 0) {
+        await supabase.from('explorations').delete().eq('trip_id', tripData.id);
         const { error: expErr } = await supabase.from('explorations').insert(
           trip.customExplorations.map(item => ({
             id: item.id && typeof item.id === 'string' && item.id.length === 36 ? item.id : undefined,
