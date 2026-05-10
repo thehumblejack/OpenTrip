@@ -68,7 +68,7 @@ export default function Home() {
   const [idToDelete, setIdToDelete] = useState<string | null>(null);
   const [exploreSubTab, setExploreSubTab] = useState("suggestions");
   const [selectedCopyDays, setSelectedCopyDays] = useState<string[]>([]);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<import("@supabase/supabase-js").User | null>(null);
   const [isLoadingTrip, setIsLoadingTrip] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -79,29 +79,15 @@ export default function Home() {
   const supabase = createClient();
   const { suggestions, loading: suggestionsLoading, error: suggestionsError, fetchSuggestions } = usePlaceSuggestions();
 
-  // Handle Auth & Load Trip
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
-      if (user) loadTripFromSupabase(user.id);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) loadTripFromSupabase(session.user.id);
-      else if (_event === 'SIGNED_OUT') setTrip(null);
-    });
-    return () => subscription.unsubscribe();
-  }, [supabase]);
-
-  const loadTripFromSupabase = async (userId: string) => {
+  const loadTripFromSupabase = useCallback(async (userId: string) => {
     setIsLoadingTrip(true);
     const { data: trips, error } = await supabase.from('trips').select('*, activities(*)').eq('user_id', userId).order('created_at', { ascending: false }).limit(1);
     if (trips?.[0]) {
       const t = trips[0];
-      const allActs = t.activities || [];
+      const allActs = (t.activities as any[]) || [];
       // Deduplicate activities in case database has duplicates
       const seen = new Set();
-      const uniqueActs = [];
+      const uniqueActs: any[] = [];
       for (const act of allActs) {
         const key = `${act.title}|${act.date}|${act.time}|${act.location}|${act.is_exploration}`;
         if (!seen.has(key)) {
@@ -130,76 +116,9 @@ export default function Home() {
       fetchSuggestions(t.destination);
     }
     setIsLoadingTrip(false);
-  };
+  }, [supabase, fetchSuggestions]);
 
-  const handleAuthAction = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isSignUp) {
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) alert(error.message);
-      else alert("Check your email for the confirmation link!");
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) alert(error.message);
-    }
-  };
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-  };
-
-  // Persist trip to localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem("my-trip-planner-trip");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        parsed.startDate = new Date(parsed.startDate);
-        parsed.endDate = new Date(parsed.endDate);
-        if (!parsed.customExplorations) parsed.customExplorations = [];
-        setTrip(parsed);
-        fetchSuggestions(parsed.destination);
-      } catch (e) {
-        console.error("Failed to load saved trip", e);
-      }
-    }
-  }, [fetchSuggestions]);
-
-  useEffect(() => {
-    if (user) {
-      loadTripFromSupabase(user.id);
-      
-      // Auto-migrate local data if it exists
-      const localData = localStorage.getItem('travel-itinerary');
-      if (localData) {
-        try {
-          const parsed = JSON.parse(localData);
-          if (parsed.activities?.length > 0 || parsed.customExplorations?.length > 0) {
-            console.log("Migrating local data to Supabase...");
-            // Merge local data into state and syncTripToSupabase will handle the rest
-            setTrip(prev => ({
-              ...(prev || { destination: parsed.destination || "", startDate: new Date(), endDate: new Date(), documents: [], activities: [], customExplorations: [] }),
-              activities: [...(prev?.activities || []), ...parsed.activities.filter((la: any) => !prev?.activities.find((pa: any) => pa.id === la.id))],
-              customExplorations: [...(prev?.customExplorations || []), ...parsed.customExplorations.filter((le: any) => !prev?.customExplorations.find((pe: any) => pe.id === le.id))],
-            }));
-            // Remove local data after successful "lift"
-            localStorage.removeItem('travel-itinerary');
-          }
-        } catch (e) {
-          console.error("Migration error:", e);
-        }
-      }
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (trip && !isLoadingTrip) {
-      localStorage.setItem("my-trip-planner-trip", JSON.stringify(trip));
-      if (user) syncTripToSupabase();
-    }
-  }, [trip, user, isLoadingTrip]);
-
-  const syncTripToSupabase = async () => {
+  const syncTripToSupabase = useCallback(async () => {
     if (!user || !trip) return;
     if (syncInProgressRef.current) return;
     syncInProgressRef.current = true;
@@ -251,7 +170,7 @@ export default function Home() {
             let parsedDate = null;
             if (item.date) {
               if (typeof item.date === 'string') parsedDate = item.date.split('T')[0];
-              else if (item.date instanceof Date) parsedDate = item.date.toISOString().split('T')[0];
+              else if ((item.date as any) instanceof Date) parsedDate = (item.date as any).toISOString().split('T')[0];
             }
             return {
               id: item.id && typeof item.id === 'string' && item.id.length === 36 ? item.id : undefined,
@@ -285,7 +204,90 @@ export default function Home() {
     }
     setSyncStatus("synced");
     syncInProgressRef.current = false;
+  }, [user, trip, supabase]);
+
+  // Handle Auth & Load Trip
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+      if (user) loadTripFromSupabase(user.id);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) loadTripFromSupabase(session.user.id);
+      else if (_event === 'SIGNED_OUT') setTrip(null);
+    });
+    return () => subscription.unsubscribe();
+  }, [supabase, loadTripFromSupabase]);
+
+
+  const handleAuthAction = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSignUp) {
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) alert(error.message);
+      else alert("Check your email for the confirmation link!");
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) alert(error.message);
+    }
   };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  // Persist trip to localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("my-trip-planner-trip");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        parsed.startDate = new Date(parsed.startDate);
+        parsed.endDate = new Date(parsed.endDate);
+        if (!parsed.customExplorations) parsed.customExplorations = [];
+        setTrip(parsed);
+        fetchSuggestions(parsed.destination);
+      } catch (e) {
+        console.error("Failed to load saved trip", e);
+      }
+    }
+  }, [fetchSuggestions]);
+
+  useEffect(() => {
+    if (user) {
+      loadTripFromSupabase(user.id);
+      
+      // Auto-migrate local data if it exists
+      const localData = localStorage.getItem('travel-itinerary');
+      if (localData) {
+        try {
+          const parsed = JSON.parse(localData);
+          if (parsed.activities?.length > 0 || parsed.customExplorations?.length > 0) {
+            console.log("Migrating local data to Supabase...");
+            // Merge local data into state and syncTripToSupabase will handle the rest
+            setTrip(prev => ({
+              ...(prev || { destination: parsed.destination || "", startDate: new Date(), endDate: new Date(), documents: [], activities: [], customExplorations: [] }),
+              activities: [...(prev?.activities || []), ...parsed.activities.filter((la: Activity) => !prev?.activities.find((pa: Activity) => pa.id === la.id))],
+              customExplorations: [...(prev?.customExplorations || []), ...parsed.customExplorations.filter((le: Activity) => !prev?.customExplorations.find((pe: Activity) => pe.id === le.id))],
+            }));
+            // Remove local data after successful "lift"
+            localStorage.removeItem('travel-itinerary');
+          }
+        } catch (e) {
+          console.error("Migration error:", e);
+        }
+      }
+    }
+  }, [user, loadTripFromSupabase]);
+
+  useEffect(() => {
+    if (trip && !isLoadingTrip) {
+      localStorage.setItem("my-trip-planner-trip", JSON.stringify(trip));
+      if (user) syncTripToSupabase();
+    }
+  }, [trip, user, isLoadingTrip, syncTripToSupabase]);
+
 
   const tripDays = useMemo(() => {
     if (!trip) return [];
