@@ -22,6 +22,7 @@ import { usePlaceSuggestions, getCategoryIcon, getCategoryColor, fetchPlaceGalle
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { createClient } from "@/utils/supabase/client";
 import { Separator } from "@/components/ui/separator";
+import { WeatherBar } from "@/components/WeatherBar";
 
 const TripMap = dynamic(() => import("@/components/TripMap").then(m => ({ default: m.TripMap })), { ssr: false });
 
@@ -679,6 +680,8 @@ export default function Home() {
           )}
         </div>
       </header>
+
+      <WeatherBar lat={trip.destLat} lon={trip.destLon} />
 
       <ResizablePanelGroup direction="horizontal" className="flex-1">
         <ResizablePanel defaultSize={25} minSize={20} className="flex flex-col bg-white border-r border-zinc-100">
