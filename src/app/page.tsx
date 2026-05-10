@@ -69,7 +69,7 @@ export default function Home() {
   const [customExplorationLat, setCustomExplorationLat] = useState<string>();
   const [customExplorationLon, setCustomExplorationLon] = useState<string>();
   const [idToDelete, setIdToDelete] = useState<string | null>(null);
-  const [exploreSubTab, setExploreSubTab] = useState("suggestions");
+  const [exploreSubTab, setExploreSubTab] = useState("custom");
   const [selectedCopyDays, setSelectedCopyDays] = useState<string[]>([]);
   const [user, setUser] = useState<import("@supabase/supabase-js").User | null>(null);
   const [isLoadingTrip, setIsLoadingTrip] = useState(false);
@@ -155,9 +155,10 @@ export default function Home() {
     try {
       // 2. Sync Activities
       if (trip.activities.length > 0) {
-        await supabase.from('activities').delete().eq('trip_id', tripData.id);
-        const { error: actErr } = await supabase.from('activities').insert(
-          trip.activities.map(item => {
+        // Deduplicate locally just in case
+        const uniqueActs = Array.from(new Map(trip.activities.map(a => [a.id, a])).values());
+        const { error: actErr } = await supabase.from('activities').upsert(
+          uniqueActs.map(item => {
             let parsedDate = null;
             if (item.date) {
               if (typeof item.date === 'string') parsedDate = item.date.split('T')[0];
@@ -177,16 +178,18 @@ export default function Home() {
               notes: item.notes || null,
               is_exploration: false
             };
-          })
+          }),
+          { onConflict: 'id' }
         );
         if (actErr) console.error("Activities sync error:", actErr);
       }
 
       // 3. Sync Explorations
       if (trip.customExplorations.length > 0) {
-        await supabase.from('explorations').delete().eq('trip_id', tripData.id);
-        const { error: expErr } = await supabase.from('explorations').insert(
-          trip.customExplorations.map(item => ({
+        // Deduplicate locally just in case
+        const uniqueExps = Array.from(new Map(trip.customExplorations.map(e => [e.id, e])).values());
+        const { error: expErr } = await supabase.from('explorations').upsert(
+          uniqueExps.map(item => ({
             id: item.id && typeof item.id === 'string' && item.id.length === 36 ? item.id : undefined,
             trip_id: tripData.id,
             title: item.title || "Untitled",
@@ -195,7 +198,8 @@ export default function Home() {
             lon: item.lon && item.lon !== "" ? parseFloat(item.lon) : null,
             category: item.category,
             notes: item.notes || null
-          }))
+          })),
+          { onConflict: 'id' }
         );
         if (expErr) console.error("Explorations sync error:", expErr);
       }
