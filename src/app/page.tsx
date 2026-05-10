@@ -24,6 +24,9 @@ import { createClient } from "@/utils/supabase/client";
 import { Separator } from "@/components/ui/separator";
 import { WeatherBar } from "@/components/WeatherBar";
 import { BackupManager } from "@/components/BackupManager";
+import { AuthForm } from "@/components/AuthForm";
+import { ExploreTab } from "@/components/ExploreTab";
+import { Itinerary } from "@/components/Itinerary";
 
 const TripMap = dynamic(() => import("@/components/TripMap").then(m => ({ default: m.TripMap })), { ssr: false });
 
@@ -521,97 +524,15 @@ export default function Home() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#fafafa] p-6 relative overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-zinc-100 rounded-full blur-[120px] opacity-50" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-zinc-200 rounded-full blur-[120px] opacity-50" />
-        
-        <div className="relative z-10 w-full max-w-md space-y-8">
-          <div className="text-center space-y-4">
-            <div className="mx-auto bg-zinc-900 w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl rotate-3">
-              <Plane className="w-7 h-7 text-white" />
-            </div>
-            <div className="space-y-1">
-              <h1 className="text-3xl font-bold tracking-tighter text-zinc-900">MyTripPlanner</h1>
-              <p className="text-zinc-500 font-medium text-sm">Synchronized Travel OS</p>
-            </div>
-          </div>
-
-          <Card className="border-0 shadow-2xl rounded-[32px] overflow-hidden bg-white/80 backdrop-blur-xl">
-            <CardHeader className="text-center pt-10 pb-6">
-              <CardTitle className="text-2xl font-bold">Ready to explore?</CardTitle>
-              <CardDescription className="text-zinc-500 px-4">
-                Sign in to create itineraries, sync documents, and explore hidden gems.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="px-8 pb-8 space-y-6">
-              <form onSubmit={handleAuthAction} className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Email Address</Label>
-                  <Input 
-                    type="email" 
-                    placeholder="name@example.com" 
-                    value={email} 
-                    onChange={e => setEmail(e.target.value)}
-                    className="h-11 rounded-xl"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Password</Label>
-                  <Input 
-                    type="password" 
-                    placeholder="••••••••" 
-                    value={password} 
-                    onChange={e => setPassword(e.target.value)}
-                    className="h-11 rounded-xl"
-                  />
-                </div>
-                <Button type="submit" className="w-full h-12 rounded-xl text-sm font-bold gap-3 shadow-lg hover:shadow-xl transition-all mt-2">
-                  {isSignUp ? "Create My Account" : "Sign In to My Planner"}
-                </Button>
-              </form>
-
-              <div className="text-center">
-                <button 
-                  onClick={() => setIsSignUp(!isSignUp)} 
-                  className="text-[10px] font-bold text-zinc-400 hover:text-zinc-900 uppercase tracking-widest transition-colors"
-                >
-                  {isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up"}
-                </button>
-              </div>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center"><Separator /></div>
-                <div className="relative flex justify-center text-[10px] uppercase font-bold text-zinc-400 bg-white/0"><span className="px-2 bg-white">Explore Features</span></div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <div className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-zinc-50/50 border border-zinc-100">
-                  <Compass className="w-4 h-4 text-zinc-400" />
-                  <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 text-center">Discovery</span>
-                </div>
-                <div className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-zinc-50/50 border border-zinc-100">
-                  <MapIcon className="w-4 h-4 text-zinc-400" />
-                  <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 text-center">Map</span>
-                </div>
-                <div className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-zinc-50/50 border border-zinc-100">
-                  <Cloud className="w-4 h-4 text-zinc-400" />
-                  <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 text-center">Sync</span>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="bg-zinc-50/50 border-t border-zinc-100 py-4 flex justify-center">
-              <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Travel OS v1.0 · Supabase Secure</p>
-            </CardFooter>
-          </Card>
-
-          <div className="flex justify-center gap-2">
-            <Badge variant="secondary" className="bg-white/50 text-zinc-400 border-zinc-200 text-[9px] font-bold uppercase px-3">Private</Badge>
-            <Badge variant="secondary" className="bg-white/50 text-zinc-400 border-zinc-200 text-[9px] font-bold uppercase px-3">Fast</Badge>
-            <Badge variant="secondary" className="bg-white/50 text-zinc-400 border-zinc-200 text-[9px] font-bold uppercase px-3">Global</Badge>
-          </div>
-        </div>
-      </div>
+      <AuthForm 
+        email={email}
+        setEmail={setEmail}
+        password={password}
+        setPassword={setPassword}
+        isSignUp={isSignUp}
+        setIsSignUp={setIsSignUp}
+        handleAuthAction={handleAuthAction}
+      />
     );
   }
 
@@ -716,60 +637,47 @@ export default function Home() {
             </div>
             
             <TabsContent value="explore" className="flex-1 min-h-0 overflow-hidden m-0">
-              <Tabs value={exploreSubTab} onValueChange={setExploreSubTab} className="flex flex-col h-full">
-                <div className="px-4 py-2 border-b border-zinc-100 flex justify-center bg-zinc-50/50">
-                  <TabsList className="h-7 bg-white/50 border border-zinc-100">
-                    <TabsTrigger value="suggestions" className="text-[10px] uppercase font-bold tracking-widest px-4">Suggestions</TabsTrigger>
-                    <TabsTrigger value="custom" className="text-[10px] uppercase font-bold tracking-widest px-4">Custom</TabsTrigger>
-                  </TabsList>
-                </div>
-                <div className="flex-1 overflow-hidden">
-                  <TabsContent value="suggestions" className="h-full m-0"><ScrollArea className="h-full"><div className="p-4 space-y-6">
-                    <div className="flex gap-2"><div className="relative flex-1"><Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400" /><Input className="pl-8 h-8 text-xs" placeholder="Search places..." value={exploreSearch} onChange={e => setExploreSearch(e.target.value)} onKeyDown={e => { if (e.key === "Enter") fetchSuggestions(exploreSearch.trim()); }} /></div><Button size="sm" className="h-8 text-xs px-3" onClick={() => fetchSuggestions(exploreSearch.trim() || trip.destination)} disabled={suggestionsLoading}>{suggestionsLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Search"}</Button></div>
-                    <div className="space-y-3"><p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Discover From</p><div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">{["Google Places", "TripAdvisor", "GetYourGuide", "Yelp Best"].map(s => <button key={s} onClick={() => handleSourceClick(s)} className={cn("whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold transition-all border shrink-0", selectedSource === s ? "bg-zinc-900 border-zinc-900 text-white shadow-md shadow-zinc-200" : "bg-white border-zinc-100 text-zinc-500 hover:border-zinc-300")}>{s}</button>)}</div></div>
-                    <div className="flex flex-wrap gap-1.5">{["Attraction", "Museum", "Park", "Beach", "Monument", "Art", "Food"].map(cat => <button key={cat} onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)} className={cn("px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border", selectedCategory === cat ? "bg-zinc-900 border-zinc-900 text-white" : "bg-zinc-50 border-zinc-200 text-zinc-500 hover:border-zinc-300 hover:bg-white")}>{cat === "Food" ? <Utensils className="w-3 h-3 inline mr-1" /> : getCategoryIcon(cat)} {cat}</button>)}</div>
-                    {suggestionsLoading ? <div className="py-16 flex flex-col items-center justify-center gap-3 text-zinc-400"><Loader2 className="animate-spin" /><p className="text-sm">Finding best places...</p></div> : Object.entries(suggestionsByCategory).map(([cat, places]) => (
-                      <div key={cat} className="space-y-2"><div className="flex items-center gap-2 mb-2"><p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">{cat}</p><div className="flex-1 h-px bg-zinc-100" /></div><div className="space-y-2">{places.map(place => (
-                        <div key={place.id} draggable onDragStart={e => { e.dataTransfer.setData("application/json", JSON.stringify(place)); e.dataTransfer.effectAllowed = "copy"; }} onClick={() => handleExploreFocus(place)} onMouseEnter={() => setHoveredSuggestionId(place.id)} onMouseLeave={() => setHoveredSuggestionId(null)} className={cn("group flex gap-3 rounded-2xl border bg-white overflow-hidden cursor-grab active:cursor-grabbing transition-all p-2", hoveredSuggestionId === place.id ? "border-zinc-400 shadow-lg" : "border-zinc-200")}>
-                          <div className="w-20 h-20 shrink-0 rounded-xl bg-zinc-100 overflow-hidden" onClick={e => fetchPlaceGallery(place._wikipedia, place.name).then(imgs => { setGalleryPlace(place); setGalleryImages(imgs); })}>{place.thumbnail ? <img src={place.thumbnail} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-xl">{getCategoryIcon(place.categoryLabel)}</div>}</div>
-                          <div className="flex-1 min-w-0 py-0.5 flex flex-col justify-between"><div><p className="text-[10px] font-bold text-zinc-400 uppercase">{place.categoryLabel}</p><p className="text-xs font-bold text-zinc-900 leading-tight line-clamp-2">{place.name}</p></div><button onClick={e => handleExploreAdd(place, e)} className="h-6 px-2.5 rounded-lg text-[9px] font-bold text-white shadow-sm self-start" style={{ background: getCategoryColor(place.categoryLabel) }}><Plus className="w-2.5 h-2.5 inline mr-1" /> ADD</button></div>
-                        </div>
-                      ))}</div></div>
-                    ))}
-                  </div></ScrollArea></TabsContent>
-                  <TabsContent value="custom" className="h-full m-0"><ScrollArea className="h-full"><div className="p-4 space-y-6">
-                    <div className="bg-zinc-50 rounded-2xl p-4 border border-zinc-100 space-y-3"><p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Add Custom Item</p><LocationAutocomplete placeholder="Search for a place..." value={customExplorationTitle} onChange={setCustomExplorationTitle} onCoordinatesSelect={(lat, lon) => { setCustomExplorationLat(lat); setCustomExplorationLon(lon); }} /><div className="flex flex-wrap gap-1.5">{["Attraction", "Museum", "Park", "Beach", "Monument", "Art", "Food"].map(cat => <button key={cat} onClick={() => setCustomExplorationCategory(cat)} className={cn("px-2.5 py-1 rounded-lg text-[9px] font-bold transition-all border shrink-0", customExplorationCategory === cat ? "bg-zinc-900 border-zinc-900 text-white" : "bg-white border-zinc-200 text-zinc-500 hover:border-zinc-300")}>{cat === "Food" ? <Utensils className="w-2.5 h-2.5 inline mr-1" /> : getCategoryIcon(cat)} {cat}</button>)}</div><Button className="w-full h-9 text-xs font-bold" onClick={handleAddCustomExploration}>Create Exploration</Button></div>
-                    <div className="space-y-3"><div className="flex items-center gap-2"><p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">My Custom Spots</p><div className="flex-1 h-px bg-zinc-100" /><Badge variant="outline" className="text-[9px]">{trip.customExplorations.length}</Badge></div>{trip.customExplorations.length === 0 ? <div className="py-12 flex flex-col items-center justify-center text-center"><div className="w-12 h-12 rounded-full bg-zinc-50 flex items-center justify-center mb-3 text-zinc-200"><Sparkles className="w-6 h-6" /></div><p className="text-xs font-bold text-zinc-400">No custom items yet</p></div> : <div className="space-y-2">{trip.customExplorations.map((item, idx) => (
-                      <div key={item.id} draggable onDragStart={e => { e.dataTransfer.setData("application/json", JSON.stringify({ ...item, name: item.title, categoryLabel: item.category })); e.dataTransfer.effectAllowed = "copy"; }} onClick={() => handleExploreFocus(item)} className="group flex gap-3 rounded-2xl border border-zinc-200 bg-white p-2.5 cursor-grab active:cursor-grabbing hover:border-zinc-300 transition-all">
-                        <div className="w-10 h-10 rounded-xl bg-zinc-50 flex items-center justify-center text-lg shrink-0 relative">
-                          {item.category === "Food" ? <Utensils className="w-5 h-5 text-zinc-900" /> : getCategoryIcon(item.category || "Attraction")}
-                          <div className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-zinc-900 text-white rounded-full flex items-center justify-center text-[8px] font-bold shadow-sm">{idx + 1}</div>
-                        </div>
-                        <div className="flex-1 min-w-0 flex flex-col justify-center"><p className="text-[10px] font-bold text-zinc-400 uppercase">{item.category}</p><p className="text-xs font-bold text-zinc-900 leading-tight truncate">{item.title}</p></div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={e => handleExploreAdd(item, e)} className="p-1.5 hover:bg-zinc-50 rounded-lg text-zinc-400 hover:text-zinc-900"><Plus className="w-3.5 h-3.5" /></button><button onClick={() => deleteCustomExploration(item.id)} className="p-1.5 hover:bg-red-50 rounded-lg text-zinc-300 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button></div>
-                      </div>
-                    ))}</div>}</div>
-                  </div></ScrollArea></TabsContent>
-                </div>
-              </Tabs>
+              <ExploreTab 
+                exploreSubTab={exploreSubTab}
+                setExploreSubTab={setExploreSubTab}
+                exploreSearch={exploreSearch}
+                setExploreSearch={setExploreSearch}
+                fetchSuggestions={fetchSuggestions}
+                suggestionsLoading={suggestionsLoading}
+                selectedSource={selectedSource}
+                handleSourceClick={handleSourceClick}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                suggestionsByCategory={suggestionsByCategory}
+                handleExploreAdd={handleExploreAdd}
+                handleExploreFocus={handleExploreFocus}
+                hoveredSuggestionId={hoveredSuggestionId}
+                setHoveredSuggestionId={setHoveredSuggestionId}
+                fetchPlaceGallery={fetchPlaceGallery}
+                setGalleryPlace={setGalleryPlace}
+                setGalleryImages={setGalleryImages}
+                customExplorationTitle={customExplorationTitle}
+                setCustomExplorationTitle={setCustomExplorationTitle}
+                setCustomExplorationLat={setCustomExplorationLat}
+                setCustomExplorationLon={setCustomExplorationLon}
+                customExplorationCategory={customExplorationCategory}
+                setCustomExplorationCategory={setCustomExplorationCategory}
+                handleAddCustomExploration={handleAddCustomExploration}
+                trip={trip}
+                deleteCustomExploration={deleteCustomExploration}
+                tripDestination={trip?.destination || ""}
+              />
             </TabsContent>
 
             <TabsContent value="itinerary" className="flex-1 min-h-0 overflow-hidden m-0 bg-zinc-50/30">
-              <ScrollArea className="h-full"><div className="p-4 space-y-4">
-                <Accordion multiple className="space-y-3">{tripDays.map((day, idx) => {
-                  const acts = trip.activities.filter(a => a.date === day.toISOString() || a.date === format(day, "yyyy-MM-dd")).sort((a,b) => (a.time || "").localeCompare(b.time || ""));
-                  return (
-                    <AccordionItem key={day.toISOString()} value={day.toISOString()} className="border border-zinc-200 rounded-xl overflow-hidden bg-white shadow-sm">
-                      <div className="flex items-center pr-2"><div className="flex-1 flex items-center gap-2 py-3 pl-3"><div className="w-6 h-6 rounded-lg bg-zinc-900 text-white flex items-center justify-center text-[10px] font-bold shrink-0">{idx + 1}</div><div className="text-left"><p className="text-[11px] font-bold text-zinc-900 leading-none">{format(day, "EEE")}</p><p className="text-[9px] text-zinc-400 mt-1 font-bold uppercase tracking-wider">{format(day, "MMM d")}</p></div></div><button onClick={() => openDialog(day)} className="p-1.5 text-zinc-400 hover:text-zinc-900"><Plus className="w-3.5 h-3.5" /></button><AccordionTrigger className="p-1.5" /></div>
-                      <AccordionContent className="border-t border-zinc-50 p-3 space-y-2">{acts.length === 0 ? <p className="text-[10px] text-zinc-400 text-center py-2">Empty</p> : acts.map(act => (
-                        <div key={act.id} onClick={() => openEditDialog(act)} className={cn("group/item relative rounded-xl border p-2.5 cursor-pointer transition-all", selectedId === act.id ? "bg-zinc-900 text-white border-zinc-900 shadow-lg" : "bg-white hover:border-zinc-300")}>
-                          <div className="flex justify-between items-start"><div className="flex-1 min-w-0"><div className="flex items-center gap-2 mb-1 opacity-60"><Clock className="w-2.5 h-2.5" /><span className="text-[9px] font-bold">{act.time}</span></div><p className="text-[11px] font-bold line-clamp-1">{act.title}</p></div><button onClick={e => { e.stopPropagation(); setIdToDelete(act.id); }} className={cn("p-1.5 rounded-lg transition-all", selectedId === act.id ? "text-white/20 hover:text-red-400 hover:bg-white/10" : "text-zinc-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover/item:opacity-100")}><Trash2 className="w-3 h-3" /></button></div>
-                        </div>
-                      ))}</AccordionContent>
-                    </AccordionItem>
-                  );
-                })}</Accordion>
-              </div></ScrollArea>
+              <Itinerary 
+                tripDays={tripDays}
+                trip={trip}
+                selectedId={selectedId}
+                openDialog={openDialog}
+                openEditDialog={openEditDialog}
+                setIdToDelete={setIdToDelete}
+              />
             </TabsContent>
           </Tabs>
         </ResizablePanel>
