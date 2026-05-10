@@ -26,7 +26,7 @@ export function Itinerary({
   return (
     <ScrollArea className="h-full">
       <div className="p-4 space-y-4">
-        <Accordion type="multiple" className="space-y-3">
+        <Accordion multiple className="space-y-3">
           {tripDays.map((day, idx) => {
             const acts = trip.activities
               .filter((a: any) => a.date === day.toISOString() || a.date === format(day, "yyyy-MM-dd"))
