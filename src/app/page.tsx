@@ -431,6 +431,24 @@ export default function Home() {
     setTrip({ ...trip, customExplorations: trip.customExplorations.filter(e => e.id !== id) });
   };
 
+  const handleMapClick = async (lat: number, lon: number) => {
+    if (!trip) return;
+    setActiveTab("explore");
+    setExploreSubTab("custom");
+    setCustomExplorationLat(lat.toString());
+    setCustomExplorationLon(lon.toString());
+    setCustomExplorationTitle("Loading address...");
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+      const data = await res.json();
+      const placeName = data.display_name || "Custom Map Spot";
+      const shortName = placeName.split(",").slice(0, 3).join(",").trim() || placeName;
+      setCustomExplorationTitle(shortName);
+    } catch (e) {
+      setCustomExplorationTitle("Selected Map Spot");
+    }
+  };
+
   const handleExploreAdd = useCallback((place: any, e: React.MouseEvent) => {
     e.stopPropagation();
     setALocation(place.name || place.location || ""); setALat(place.lat); setALon(place.lon); setATitle(place.name || place.title || "");
@@ -814,6 +832,7 @@ export default function Home() {
             selectedActivity={selectedActivity} 
             activeTab={activeTab} 
             focusedPlace={focusedPlace} 
+            onMapClick={handleMapClick}
           />
           {selectedActivity?.location && <div className="absolute top-5 right-5 w-72 z-[1000]"><Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-sm"><CardHeader className="pb-2 pt-4 px-4"><Badge variant="secondary" className="w-fit text-[10px] mb-2">{format(new Date(selectedActivity.date), "MMM d")}</Badge><CardTitle className="text-base">{selectedActivity.title}</CardTitle></CardHeader><CardContent className="px-4 pb-4 space-y-2 text-xs text-zinc-500"><div className="flex gap-1.5"><MapPin className="w-3.5 h-3.5" /><span>{selectedActivity.location}</span></div>{selectedActivity.notes && <p className="bg-zinc-50 p-2.5 rounded-lg">{selectedActivity.notes}</p>}</CardContent></Card></div>}
         </ResizablePanel>

@@ -21,12 +21,13 @@ interface TripMapProps {
   selectedActivity: Activity | null;
   activeTab: string;
   focusedPlace?: { lat: string; lon: string } | null;
+  onMapClick?: (lat: number, lon: number) => void;
 }
 
 const OSM_TILES = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 const SAT_TILES = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
 
-export function TripMap({ destLat, destLon, destination, suggestions, activities, hoveredId, onHoverSuggestion, onSelectSuggestion, onSelectActivity, selectedActivity, activeTab, focusedPlace }: TripMapProps) {
+export function TripMap({ destLat, destLon, destination, suggestions, activities, hoveredId, onHoverSuggestion, onSelectSuggestion, onSelectActivity, selectedActivity, activeTab, focusedPlace, onMapClick }: TripMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
@@ -45,6 +46,11 @@ export function TripMap({ destLat, destLon, destination, suggestions, activities
     tileLayerRef.current = tile;
     mapRef.current = map;
     map.setView([20, 0], 2);
+    
+    map.on("click", (e) => {
+      if (onMapClick) onMapClick(e.latlng.lat, e.latlng.lng);
+    });
+
     return () => { map.remove(); mapRef.current = null; };
   }, []);
 
