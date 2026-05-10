@@ -246,7 +246,7 @@ export default function Home() {
 
     if (allItemsToSync.length > 0) {
       try {
-        const { error: insErr } = await supabase.from('activities').insert(
+        const { error: insErr } = await supabase.from('activities').upsert(
           allItemsToSync.map(item => {
             let parsedDate = null;
             if (item.date) {
@@ -267,7 +267,8 @@ export default function Home() {
               notes: item.notes || null,
               is_exploration: item.is_exploration
             };
-          })
+          }),
+          { onConflict: 'id' }
         );
         if (insErr) {
           console.error("Activity sync error:", insErr);
@@ -492,7 +493,7 @@ export default function Home() {
 
   const clearTrip = () => { if (confirm("Start over?")) { setTrip(null); localStorage.removeItem("my-trip-planner-trip"); setDestination(""); setStartDate(undefined); setEndDate(undefined); } };
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || !trip) return;
+    if (!e.target.files || !e.target.files[0] || !trip) return;
     const file = e.target.files[0];
     let fileUrl = URL.createObjectURL(file);
 

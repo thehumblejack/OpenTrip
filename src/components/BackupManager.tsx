@@ -1,16 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Download, Upload, Database, AlertCircle } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { useState, useRef, useEffect } from "react";
+import { Download, Upload, Database, AlertCircle, X } from "lucide-react";
 import { format } from "date-fns";
 
 interface BackupManagerProps {
@@ -19,12 +10,25 @@ interface BackupManagerProps {
 }
 
 export function BackupManager({ trip, onRestore }: BackupManagerProps) {
+  const [open, setOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
   
   const handleDownloadBackup = () => {
     if (!trip) return;
     
-    // Create a clean backup object
     const backupData = {
       version: "1.0",
       exportDate: new Date().toISOString(),
@@ -40,6 +44,7 @@ export function BackupManager({ trip, onRestore }: BackupManagerProps) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    setOpen(false);
   };
 
   const handleRestoreBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,7 +58,6 @@ export function BackupManager({ trip, onRestore }: BackupManagerProps) {
         const parsed = JSON.parse(content);
         
         if (parsed.trip && parsed.trip.destination) {
-          // Re-hydrate Date objects
           const restoredTrip = {
             ...parsed.trip,
             startDate: new Date(parsed.trip.startDate),
@@ -69,16 +73,16 @@ export function BackupManager({ trip, onRestore }: BackupManagerProps) {
         alert("Failed to read the backup file. It might be corrupted.");
       }
       
-      // Reset input so the same file can be selected again if needed
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
     };
     reader.readAsText(file);
+    setOpen(false);
   };
 
   return (
-    <>
+    <div className="relative" ref={menuRef}>
       <input 
         type="file" 
         accept=".json" 
@@ -86,31 +90,48 @@ export function BackupManager({ trip, onRestore }: BackupManagerProps) {
         ref={fileInputRef} 
         onChange={handleRestoreBackup} 
       />
-      <DropdownMenu>
-        <DropdownMenuTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 rounded-md px-3 text-zinc-600">
-          <Database className="w-3.5 h-3.5" />
-          Backups
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <div className="px-2 py-1.5 text-sm font-semibold text-zinc-900">Data Management</div>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleDownloadBackup} disabled={!trip}>
-            <Download className="w-4 h-4 mr-2" />
+      
+      {/* Trigger */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-colors border border-zinc-200 bg-white hover:bg-zinc-50 h-8 rounded-md px-3 text-zinc-600"
+      >
+        <Database className="w-3.5 h-3.5" />
+        Backups
+      </button>
+
+      {/* Popover */}
+      {open && (
+        <div className="absolute right-0 top-10 z-50 w-56 rounded-lg bg-white p-1 shadow-lg ring-1 ring-zinc-200 animate-in fade-in-0 zoom-in-95 duration-100">
+          <div className="px-2 py-1.5 text-xs font-semibold text-zinc-900">Data Management</div>
+          <div className="h-px bg-zinc-100 -mx-0 my-1" />
+          
+          <button
+            onClick={handleDownloadBackup}
+            disabled={!trip}
+            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-100 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+          >
+            <Download className="w-4 h-4" />
             Download JSON Backup
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
-            <Upload className="w-4 h-4 mr-2" />
+          </button>
+          
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-100 transition-colors"
+          >
+            <Upload className="w-4 h-4" />
             Restore from Backup
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <div className="p-2 px-3 flex items-start gap-2 bg-amber-50 text-amber-900 rounded-sm m-1 mt-2">
+          </button>
+
+          <div className="h-px bg-zinc-100 -mx-0 my-1" />
+          <div className="p-2 px-3 flex items-start gap-2 bg-amber-50 text-amber-900 rounded-sm m-1 mt-1 mb-1">
             <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
             <p className="text-[10px] leading-tight">
               Backups are saved as JSON files to your computer. You can open them in any text editor to view your data.
             </p>
           </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </>
+        </div>
+      )}
+    </div>
   );
 }

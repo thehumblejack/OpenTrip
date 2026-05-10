@@ -61,8 +61,8 @@ export function WeatherBar({ lat, lon }: WeatherBarProps) {
         const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max&hourly=temperature_2m,precipitation_probability,weathercode,windspeed_10m&timezone=auto&forecast_days=16`);
         const json = await res.json();
         if (isMounted) setData(json);
-      } catch (e) {
-        console.error("Failed to fetch weather", e);
+      } catch {
+        // Silently handle — often caused by browser extensions intercepting fetch
       } finally {
         if (isMounted) setLoading(false);
       }
