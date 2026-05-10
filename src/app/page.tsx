@@ -23,6 +23,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 import { createClient } from "@/utils/supabase/client";
 import { Separator } from "@/components/ui/separator";
 import { WeatherBar } from "@/components/WeatherBar";
+import { BackupManager } from "@/components/BackupManager";
 
 const TripMap = dynamic(() => import("@/components/TripMap").then(m => ({ default: m.TripMap })), { ssr: false });
 
@@ -675,6 +676,10 @@ export default function Home() {
             <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 hidden sm:inline-block">
               {syncStatus === "syncing" ? "Syncing..." : syncStatus === "synced" ? "Cloud Synced" : "Sync Error"}
             </span>
+          </div>
+          
+          <div className="flex items-center gap-2 pr-4 border-r border-zinc-100">
+            <BackupManager trip={trip} onRestore={(restoredTrip) => setTrip(restoredTrip)} />
           </div>
 
           {user && (

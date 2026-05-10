@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${sora.variable} h-full antialiased`}>
+    <html lang="en" className={`${sora.variable} h-full antialiased`} suppressHydrationWarning>
       {/* suppressHydrationWarning prevents browser-extension attribute mismatches */}
       <body className="min-h-full flex flex-col" style={{ fontFamily: "var(--font-sora), ui-sans-serif, system-ui, sans-serif" }} suppressHydrationWarning>
         {children}
