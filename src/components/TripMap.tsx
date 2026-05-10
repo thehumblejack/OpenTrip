@@ -126,8 +126,6 @@ export function TripMap({ destLat, destLon, destination, suggestions, activities
       map.flyTo([+focusedPlace.lat, +focusedPlace.lon], 15, { duration: 1.5 });
     } else if (selectedActivity?.lat && selectedActivity?.lon) {
       map.flyTo([+selectedActivity.lat, +selectedActivity.lon], 15, { duration: 1 });
-    } else if (allBounds.length) {
-      map.fitBounds(L.latLngBounds(allBounds), { padding: [80, 80] });
     }
   }, [activities, suggestions, selectedActivity, focusedPlace, hoveredId, activeTab, onSelectSuggestion, onHoverSuggestion]);
 
