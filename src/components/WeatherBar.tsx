@@ -58,7 +58,7 @@ export function WeatherBar({ lat, lon }: WeatherBarProps) {
     const fetchWeather = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max&hourly=temperature_2m,precipitation_probability,weathercode,windspeed_10m&timezone=auto`);
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max&hourly=temperature_2m,precipitation_probability,weathercode,windspeed_10m&timezone=auto&forecast_days=16`);
         const json = await res.json();
         if (isMounted) setData(json);
       } catch (e) {
@@ -114,6 +114,14 @@ export function WeatherBar({ lat, lon }: WeatherBarProps) {
                   </div>
                 );
               })}
+              <a 
+                href="https://open-meteo.com/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex flex-col items-center justify-center px-4 py-1.5 rounded-xl border border-zinc-100 border-dashed hover:border-zinc-300 hover:bg-zinc-50 cursor-pointer transition-all bg-white min-w-[100px] group text-[10px] font-bold text-zinc-400 text-center"
+              >
+                Weather data by<br/><span className="text-blue-500 group-hover:text-blue-600 mt-1">Open-Meteo ↗</span>
+              </a>
             </div>
           </ScrollArea>
           <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none" />
@@ -197,6 +205,12 @@ export function WeatherBar({ lat, lon }: WeatherBarProps) {
                       })}
                     </div>
                   </ScrollArea>
+                </div>
+                
+                <div className="flex justify-end pt-2 border-t border-zinc-100">
+                  <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer" className="text-[9px] font-bold text-zinc-400 hover:text-blue-500 uppercase tracking-widest transition-colors">
+                    Source: Open-Meteo ↗
+                  </a>
                 </div>
               </div>
             </>
