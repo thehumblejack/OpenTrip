@@ -22,12 +22,13 @@ interface TripMapProps {
   activeTab: string;
   focusedPlace?: { lat: string; lon: string } | null;
   onMapClick?: (lat: number, lon: number) => void;
+  draftLocation?: { lat: string; lon: string } | null;
 }
 
 const OSM_TILES = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 const SAT_TILES = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
 
-export function TripMap({ destLat, destLon, destination, suggestions, activities, hoveredId, onHoverSuggestion, onSelectSuggestion, onSelectActivity, selectedActivity, activeTab, focusedPlace, onMapClick }: TripMapProps) {
+export function TripMap({ destLat, destLon, destination, suggestions, activities, hoveredId, onHoverSuggestion, onSelectSuggestion, onSelectActivity, selectedActivity, activeTab, focusedPlace, onMapClick, draftLocation }: TripMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
@@ -36,6 +37,7 @@ export function TripMap({ destLat, destLon, destination, suggestions, activities
   const itineraryMarkersRef = useRef<Record<string, L.Marker>>({});
   const destMarkerRef = useRef<L.Marker | null>(null);
   const layerBtnRef = useRef<HTMLButtonElement | null>(null);
+  const draftMarkerRef = useRef<L.Marker | null>(null);
 
   // Init map
   useEffect(() => {
@@ -77,8 +79,10 @@ export function TripMap({ destLat, destLon, destination, suggestions, activities
     // Clear old
     Object.values(itineraryMarkersRef.current).forEach(m => m.remove());
     Object.values(markersRef.current).forEach(m => m.remove());
+    if (draftMarkerRef.current) draftMarkerRef.current.remove();
     itineraryMarkersRef.current = {};
     markersRef.current = {};
+    draftMarkerRef.current = null;
 
     const allBounds: L.LatLngTuple[] = [];
 
@@ -122,12 +126,22 @@ export function TripMap({ destLat, destLon, destination, suggestions, activities
       allBounds.push([+place.lat, +place.lon]);
     });
 
+    if (draftLocation?.lat && draftLocation?.lon) {
+      const icon = L.divIcon({
+        className: "focused-marker-pulse",
+        html: makeMarkerHtml("✨", "#3b82f6", true, true),
+        iconSize: [36, 46],
+        iconAnchor: [18, 46],
+      });
+      draftMarkerRef.current = L.marker([+draftLocation.lat, +draftLocation.lon], { icon, zIndexOffset: 2000 }).addTo(map);
+    }
+
     if (focusedPlace?.lat && focusedPlace?.lon) {
       map.flyTo([+focusedPlace.lat, +focusedPlace.lon], 15, { duration: 1.5 });
     } else if (selectedActivity?.lat && selectedActivity?.lon) {
       map.flyTo([+selectedActivity.lat, +selectedActivity.lon], 15, { duration: 1 });
     }
-  }, [activities, suggestions, selectedActivity, focusedPlace, hoveredId, activeTab, onSelectSuggestion, onHoverSuggestion]);
+  }, [activities, suggestions, selectedActivity, focusedPlace, hoveredId, activeTab, onSelectSuggestion, onHoverSuggestion, draftLocation]);
 
   // Layer toggle (imperative button)
   const toggleLayer = useCallback(() => {
@@ -164,7 +178,7 @@ export function TripMap({ destLat, destLon, destination, suggestions, activities
   );
 }
 
-function makeMarkerHtml(num: number, color: string, hovered: boolean, isFocused?: boolean) {
+function makeMarkerHtml(num: number | string, color: string, hovered: boolean, isFocused?: boolean) {
   const size = hovered ? 36 : 28;
   const fs = hovered ? 13 : 10;
   const ringColor = isFocused ? "#18181b" : "white";
