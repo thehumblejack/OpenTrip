@@ -211,16 +211,20 @@ export default function Home() {
 
   // Handle Auth & Load Trip
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then((res: any) => {
+      const user = res.data?.user;
+      if (user) {
+        setUser(user);
+        loadTripFromSupabase(user.id);
+      }
+    });
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
+      const user = session?.user ?? null;
       setUser(user);
       if (user) loadTripFromSupabase(user.id);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) loadTripFromSupabase(session.user.id);
       else if (_event === 'SIGNED_OUT') setTrip(null);
     });
-    return () => subscription.unsubscribe();
+    return () => authListener.subscription.unsubscribe();
   }, [supabase, loadTripFromSupabase]);
 
 
@@ -453,8 +457,7 @@ export default function Home() {
       location: customExplorationTitle, 
       category: customExplorationCategory, 
       lat: customExplorationLat, 
-      lon: customExplorationLon,
-      is_exploration: true 
+      lon: customExplorationLon 
     };
     setTrip({ ...trip, customExplorations: [...trip.customExplorations, newItem] });
     setCustomExplorationTitle(""); setCustomExplorationLat(undefined); setCustomExplorationLon(undefined);
@@ -765,8 +768,9 @@ export default function Home() {
                 name: e.title, 
                 lat: e.lat!, 
                 lon: e.lon!, 
-                categoryLabel: e.category 
-              }))
+                category: e.category || "Attraction",
+                categoryLabel: e.category || "Attraction" 
+              } as any))
             ]}
             hoveredId={hoveredSuggestionId} 
             onHoverSuggestion={setHoveredSuggestionId} 

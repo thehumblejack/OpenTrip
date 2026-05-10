@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from "react";
 
 export interface PlaceSuggestion {
-  id: number;
+  id: string | number;
   name: string;
   category: string;
   categoryLabel: string;
