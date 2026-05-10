@@ -82,22 +82,20 @@ export default function Home() {
   const supabase = createClient();
   const { suggestions, loading: suggestionsLoading, error: suggestionsError, fetchSuggestions } = usePlaceSuggestions();
 
+  const hasLoadedTripRef = useRef(false);
   const loadTripFromSupabase = useCallback(async (userId: string) => {
     setIsLoadingTrip(true);
-    const { data: trips, error } = await supabase.from('trips').select('*, activities(*)').eq('user_id', userId).order('created_at', { ascending: false }).limit(1);
+    const { data: trips, error } = await supabase
+      .from('trips')
+      .select('*, activities(*), explorations(*)')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
     if (trips?.[0]) {
       const t = trips[0];
-      const allActs = (t.activities as any[]) || [];
-      // Deduplicate activities in case database has duplicates
-      const seen = new Set();
-      const uniqueActs: any[] = [];
-      for (const act of allActs) {
-        const key = `${act.title}|${act.date}|${act.time}|${act.location}|${act.is_exploration}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          uniqueActs.push(act);
-        }
-      }
+      const activities = (t.activities as any[]) || [];
+      const explorations = (t.explorations as any[]) || [];
 
       setTrip({
         ...t,
@@ -105,12 +103,12 @@ export default function Home() {
         endDate: new Date(t.end_date),
         destLat: t.dest_lat?.toString(),
         destLon: t.dest_lon?.toString(),
-        activities: uniqueActs.filter((a: any) => !a.is_exploration).map((a: any) => ({
+        activities: activities.map((a: any) => ({
           ...a,
           date: a.date,
           attachments: [] 
         })).sort((a: any, b: any) => (a.time || "").localeCompare(b.time || "")),
-        customExplorations: uniqueActs.filter((a: any) => a.is_exploration).map((a: any) => ({
+        customExplorations: explorations.map((a: any) => ({
           ...a,
           category: a.category || "Attraction"
         })),
@@ -118,11 +116,13 @@ export default function Home() {
       });
       fetchSuggestions(t.destination);
     }
+    hasLoadedTripRef.current = true;
     setIsLoadingTrip(false);
   }, [supabase, fetchSuggestions]);
 
   const syncTripToSupabase = useCallback(async () => {
     if (!user || !trip) return;
+    if (!hasLoadedTripRef.current) return; // Don't sync if we haven't successfully loaded yet!
     if (syncInProgressRef.current) return;
     syncInProgressRef.current = true;
     setSyncStatus("syncing");
@@ -152,24 +152,12 @@ export default function Home() {
     // Update local ID if it was newly created
     if (!trip.id) setTrip(prev => prev ? ({ ...prev, id: tripData.id }) : null);
 
-    // 2. Sync Activities & Explorations
-    const { error: delErr } = await supabase.from('activities').delete().eq('trip_id', tripData.id);
-    if (delErr) {
-      console.error("Activity clear error:", delErr);
-      setSyncStatus("error");
-      syncInProgressRef.current = false;
-      return;
-    }
-
-    const allItemsToSync = [
-      ...trip.activities.map(a => ({ ...a, is_exploration: false })),
-      ...trip.customExplorations.map(e => ({ ...e, is_exploration: true }))
-    ];
-
-    if (allItemsToSync.length > 0) {
-      try {
-        const { error: insErr } = await supabase.from('activities').upsert(
-          allItemsToSync.map(item => {
+    try {
+      // 2. Sync Activities
+      await supabase.from('activities').delete().eq('trip_id', tripData.id);
+      if (trip.activities.length > 0) {
+        const { error: actErr } = await supabase.from('activities').insert(
+          trip.activities.map(item => {
             let parsedDate = null;
             if (item.date) {
               if (typeof item.date === 'string') parsedDate = item.date.split('T')[0];
@@ -187,26 +175,38 @@ export default function Home() {
               lat: item.lat && item.lat !== "" ? parseFloat(item.lat) : null,
               lon: item.lon && item.lon !== "" ? parseFloat(item.lon) : null,
               notes: item.notes || null,
-              is_exploration: item.is_exploration
+              is_exploration: false
             };
-          }),
-          { onConflict: 'id' }
+          })
         );
-        if (insErr) {
-          console.error("Activity sync error:", insErr);
-          setSyncStatus("error");
-          syncInProgressRef.current = false;
-          return;
-        }
-      } catch (err) {
-        console.error("Critical error during sync map:", err);
-        setSyncStatus("error");
-        syncInProgressRef.current = false;
-        return;
+        if (actErr) console.error("Activities sync error:", actErr);
       }
+
+      // 3. Sync Explorations
+      await supabase.from('explorations').delete().eq('trip_id', tripData.id);
+      if (trip.customExplorations.length > 0) {
+        const { error: expErr } = await supabase.from('explorations').insert(
+          trip.customExplorations.map(item => ({
+            id: item.id && typeof item.id === 'string' && item.id.length === 36 ? item.id : undefined,
+            trip_id: tripData.id,
+            title: item.title || "Untitled",
+            location: item.location,
+            lat: item.lat && item.lat !== "" ? parseFloat(item.lat) : null,
+            lon: item.lon && item.lon !== "" ? parseFloat(item.lon) : null,
+            category: item.category,
+            notes: item.notes || null
+          }))
+        );
+        if (expErr) console.error("Explorations sync error:", expErr);
+      }
+
+      setSyncStatus("synced");
+    } catch (err) {
+      console.error("Global sync error:", err);
+      setSyncStatus("error");
+    } finally {
+      syncInProgressRef.current = false;
     }
-    setSyncStatus("synced");
-    syncInProgressRef.current = false;
   }, [user, trip, supabase]);
 
   // Handle Auth & Load Trip

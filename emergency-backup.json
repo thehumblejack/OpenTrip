@@ -1,0 +1,28 @@
+const spots = [
+  { id: "1", title: "Lake Hollywood Park", lat: 34.1269, lon: -118.3259, category: "Park", is_exploration: true },
+  { id: "2", title: "Tacos a Cabron #1", lat: 34.0204, lon: -118.1565, category: "Food", is_exploration: true },
+  { id: "3", title: "Easy Street Burgers", lat: 34.1448, lon: -118.3752, category: "Food", is_exploration: true },
+  { id: "4", title: "Fisherman's Outlet", lat: 34.0408, lon: -118.2400, category: "Food", is_exploration: true },
+  { id: "5", title: "Natural History Museum of LA County", lat: 34.0171, lon: -118.2887, category: "Museum", is_exploration: true },
+  { id: "6", title: "Rainbow Lagoon Swan Boats by Wheel Fun Rentals", lat: 33.7629, lon: -118.1886, category: "Attraction", is_exploration: true },
+  { id: "7", title: "RMS Queen Mary", lat: 33.7523, lon: -118.1911, category: "Attraction", is_exploration: true },
+  { id: "8", title: "AMMATOLI", lat: 33.7707,  lon: -118.1898, category: "Food", is_exploration: true },
+  { id: "9", title: "Catalina Express", lat: 33.7635, lon: -118.1993, category: "Attraction", is_exploration: true },
+  { id: "10", title: "The Breakfast Bar", lat: 33.7675, lon: -118.1848, category: "Food", is_exploration: true },
+  { id: "11", title: "Griffith Observatory", lat: 34.1182, lon: -118.3003, category: "Attraction", is_exploration: true },
+  { id: "12", title: "Venice Canals", lat: 33.9842, lon: -118.4662, category: "Attraction", is_exploration: true },
+  { id: "13", title: "Gameplay Long Beach", lat: 33.8109, lon: -118.1163, category: "Attraction", is_exploration: true }
+];
+
+const trip = {
+  destination: "Long Beach, Los Angeles County, Californie, États-Unis d'Amérique",
+  startDate: "2026-05-12T00:00:00.000Z",
+  endDate: "2026-05-22T00:00:00.000Z",
+  destLat: "33.769016",
+  destLon: "-118.191604",
+  documents: [],
+  activities: [],
+  customExplorations: spots
+};
+
+console.log(JSON.stringify(trip, null, 2));
