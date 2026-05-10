@@ -134,25 +134,25 @@ export function WeatherBar({ lat, lon }: WeatherBarProps) {
 
       {/* Detailed Weather Dialog */}
       <Dialog open={selectedDayIdx !== null} onOpenChange={(open) => !open && setSelectedDayIdx(null)}>
-        <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden rounded-[24px]">
+        <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden rounded-[24px] gap-0 border-0 shadow-2xl">
           {selectedDayIdx !== null && data?.daily && (
             <>
-              <div className="bg-zinc-900 p-6 text-white relative overflow-hidden">
-                <div className="absolute -top-10 -right-10 opacity-10 transform scale-150">
+              <DialogHeader className="bg-zinc-900 p-6 text-white relative overflow-hidden m-0 text-left space-y-0 rounded-t-[24px]">
+                <div className="absolute -top-10 -right-10 opacity-10 transform scale-150 pointer-events-none">
                   {getWeather(data.daily.weathercode[selectedDayIdx]).icon}
                 </div>
                 <div className="relative z-10">
-                  <h2 className="text-2xl font-bold tracking-tight mb-1">
+                  <DialogTitle className="text-2xl font-bold tracking-tight mb-1 text-white border-none p-0 m-0 leading-none">
                     {format(parseISO(data.daily.time[selectedDayIdx]), "EEEE, MMMM do")}
-                  </h2>
-                  <div className="flex items-center gap-3">
+                  </DialogTitle>
+                  <div className="flex items-center gap-2.5 mt-2">
                     {getWeather(data.daily.weathercode[selectedDayIdx]).icon}
-                    <span className="font-medium text-zinc-300">
+                    <span className="font-medium text-zinc-300 text-sm">
                       {getWeather(data.daily.weathercode[selectedDayIdx]).label}
                     </span>
                   </div>
                 </div>
-              </div>
+              </DialogHeader>
               
               <div className="p-6 bg-zinc-50 space-y-6">
                 <div className="grid grid-cols-3 gap-4">
