@@ -443,7 +443,19 @@ export default function Home() {
 
   const handleAddCustomExploration = () => {
     if (!trip || !customExplorationTitle) return;
-    const newItem: Activity = { id: crypto.randomUUID(), date: "", time: "", duration: 60, title: customExplorationTitle, notes: "", location: customExplorationTitle, category: customExplorationCategory, lat: customExplorationLat, lon: customExplorationLon };
+    const newItem: Activity = { 
+      id: crypto.randomUUID(), 
+      date: "", 
+      time: "", 
+      duration: 60, 
+      title: customExplorationTitle, 
+      notes: "", 
+      location: customExplorationTitle, 
+      category: customExplorationCategory, 
+      lat: customExplorationLat, 
+      lon: customExplorationLon,
+      is_exploration: true 
+    };
     setTrip({ ...trip, customExplorations: [...trip.customExplorations, newItem] });
     setCustomExplorationTitle(""); setCustomExplorationLat(undefined); setCustomExplorationLon(undefined);
   };
@@ -746,18 +758,16 @@ export default function Home() {
             destLon={trip.destLon} 
             destination={trip.destination} 
             activities={trip.activities}
-            suggestions={
-              activeTab !== "explore" ? [] :
-              exploreSubTab === "suggestions" ? suggestions :
-              trip.customExplorations.map(e => ({ 
+            suggestions={[
+              ...(activeTab === "explore" && exploreSubTab === "suggestions" ? suggestions : []),
+              ...trip.customExplorations.map(e => ({ 
                 id: e.id, 
                 name: e.title, 
                 lat: e.lat!, 
                 lon: e.lon!, 
-                categoryLabel: e.category!, 
-                thumbnail: "" 
-              } as any))
-            } 
+                categoryLabel: e.category 
+              }))
+            ]}
             hoveredId={hoveredSuggestionId} 
             onHoverSuggestion={setHoveredSuggestionId} 
             onSelectSuggestion={place => handleExploreAdd(place, { stopPropagation: () => {} } as any)} 
