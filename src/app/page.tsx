@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { format, addDays, differenceInDays } from "date-fns";
-import { Calendar as CalendarIcon, MapPin, Clock, Plus, FileText, Trash2, Paperclip, Map as MapIcon, Plane, AlignLeft, Search, ExternalLink, Image as ImageIcon, ChevronLeft, ChevronRight, X, GripVertical, Compass, Sparkles, Loader2, Utensils, Cloud } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Plus, FileText, Trash2, Paperclip, Plane, X, GripVertical, Compass, Sparkles, Loader2, Cloud, MapPin, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
