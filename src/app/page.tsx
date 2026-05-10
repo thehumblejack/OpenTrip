@@ -244,24 +244,38 @@ export default function Home() {
     ];
 
     if (allItemsToSync.length > 0) {
-      const { error: insErr } = await supabase.from('activities').insert(
-        allItemsToSync.map(item => ({
-          id: item.id.length === 36 ? item.id : undefined,
-          trip_id: tripData.id,
-          title: item.title,
-          date: item.date ? item.date.split('T')[0] : null,
-          time: item.time || null,
-          duration: item.duration || null,
-          category: item.category,
-          location: item.location,
-          lat: item.lat,
-          lon: item.lon,
-          notes: item.notes || null,
-          is_exploration: item.is_exploration
-        }))
-      );
-      if (insErr) {
-        console.error("Activity sync error:", insErr);
+      try {
+        const { error: insErr } = await supabase.from('activities').insert(
+          allItemsToSync.map(item => {
+            let parsedDate = null;
+            if (item.date) {
+              if (typeof item.date === 'string') parsedDate = item.date.split('T')[0];
+              else if (item.date instanceof Date) parsedDate = item.date.toISOString().split('T')[0];
+            }
+            return {
+              id: item.id && typeof item.id === 'string' && item.id.length === 36 ? item.id : undefined,
+              trip_id: tripData.id,
+              title: item.title || "Untitled",
+              date: parsedDate,
+              time: item.time || null,
+              duration: item.duration || null,
+              category: item.category,
+              location: item.location,
+              lat: item.lat && item.lat !== "" ? parseFloat(item.lat) : null,
+              lon: item.lon && item.lon !== "" ? parseFloat(item.lon) : null,
+              notes: item.notes || null,
+              is_exploration: item.is_exploration
+            };
+          })
+        );
+        if (insErr) {
+          console.error("Activity sync error:", insErr);
+          setSyncStatus("error");
+          syncInProgressRef.current = false;
+          return;
+        }
+      } catch (err) {
+        console.error("Critical error during sync map:", err);
         setSyncStatus("error");
         syncInProgressRef.current = false;
         return;
