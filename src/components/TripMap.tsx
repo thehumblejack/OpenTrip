@@ -38,6 +38,7 @@ export function TripMap({ destLat, destLon, destination, suggestions, activities
   const destMarkerRef = useRef<L.Marker | null>(null);
   const layerBtnRef = useRef<HTMLButtonElement | null>(null);
   const draftMarkerRef = useRef<L.Marker | null>(null);
+  const lastPannedIdRef = useRef<string | null>(null);
 
   // Init map
   useEffect(() => {
@@ -136,10 +137,15 @@ export function TripMap({ destLat, destLon, destination, suggestions, activities
       draftMarkerRef.current = L.marker([+draftLocation.lat, +draftLocation.lon], { icon, zIndexOffset: 2000 }).addTo(map);
     }
 
-    if (focusedPlace?.lat && focusedPlace?.lon) {
-      map.flyTo([+focusedPlace.lat, +focusedPlace.lon], 15, { duration: 1.5 });
-    } else if (selectedActivity?.lat && selectedActivity?.lon) {
-      map.flyTo([+selectedActivity.lat, +selectedActivity.lon], 15, { duration: 1 });
+    // Only fly to focused place if it's new or explicitly requested
+    const focusId = focusedPlace ? `${focusedPlace.lat},${focusedPlace.lon}` : selectedActivity?.id;
+    if (focusId && focusId !== lastPannedIdRef.current) {
+      lastPannedIdRef.current = focusId;
+      if (focusedPlace?.lat && focusedPlace?.lon) {
+        map.flyTo([+focusedPlace.lat, +focusedPlace.lon], 15, { duration: 1.5 });
+      } else if (selectedActivity?.lat && selectedActivity?.lon) {
+        map.flyTo([+selectedActivity.lat, +selectedActivity.lon], 15, { duration: 1 });
+      }
     }
   }, [activities, suggestions, selectedActivity, focusedPlace, hoveredId, activeTab, onSelectSuggestion, onHoverSuggestion, draftLocation]);
 
