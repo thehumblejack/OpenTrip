@@ -29,7 +29,7 @@ export function Itinerary({
         <Accordion multiple className="space-y-3">
           {tripDays.map((day, idx) => {
             const acts = trip.activities
-              .filter((a: any) => a.date === day.toISOString() || a.date === format(day, "yyyy-MM-dd"))
+              .filter((a: any) => a.date === format(day, "yyyy-MM-dd"))
               .sort((a: any, b: any) => (a.time || "").localeCompare(b.time || ""));
             
             return (
