@@ -78,12 +78,13 @@ export function AuthForm({
             </form>
 
             <div className="text-center">
-              <button 
+              <Button 
+                variant="link"
                 onClick={() => setIsSignUp(!isSignUp)} 
-                className="text-[10px] font-bold text-zinc-400 hover:text-zinc-900 uppercase tracking-widest transition-colors"
+                className="text-[10px] font-bold text-zinc-400 hover:text-zinc-900 uppercase tracking-widest transition-colors h-auto p-0"
               >
                 {isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up"}
-              </button>
+              </Button>
             </div>
 
             <div className="relative">

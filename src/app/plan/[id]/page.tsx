@@ -27,6 +27,7 @@ import { WeatherBar } from "@/components/WeatherBar";
 import { BackupManager } from "@/components/BackupManager";
 import { ExploreTab } from "@/components/ExploreTab";
 import { Itinerary } from "@/components/Itinerary";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const TripMap = dynamic(() => import("@/components/TripMap").then(m => ({ default: m.TripMap })), { ssr: false });
 
@@ -424,13 +425,25 @@ export default function PlanPage() {
           <BackupManager trip={trip} onRestore={(restoredTrip) => setTrip(restoredTrip)} />
           {user && (
             <div className="flex items-center gap-3 pl-2">
-              <div className="text-right hidden sm:block">
-                <p className="text-[10px] font-bold text-zinc-900 leading-none">{user.email?.split('@')[0]}</p>
-                <button onClick={handleSignOut} className="text-[9px] font-bold text-zinc-400 hover:text-red-500 uppercase tracking-widest mt-1">Sign Out</button>
-              </div>
-              <div className="w-8 h-8 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden">
-                <span className="text-[10px] font-bold text-zinc-500">{user.email?.[0].toUpperCase()}</span>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger render={
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden p-0">
+                    <span className="text-[10px] font-bold text-zinc-600">{user.email?.[0].toUpperCase()}</span>
+                  </Button>
+                } />
+                <DropdownMenuContent className="w-56" align="end">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user.email?.split('@')[0]}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="text-red-600 font-bold focus:text-red-600 cursor-pointer">
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           )}
         </div>

@@ -3,6 +3,9 @@ import { Plane, Calendar as CalendarIcon, MapPin, Plus, Trash2, ArrowRight } fro
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useState } from "react";
 
 interface Trip {
   id?: string;
@@ -23,8 +26,11 @@ interface DashboardProps {
 }
 
 export function Dashboard({ trips, onSelectTrip, onCreateNew, onDeleteTrip, userEmail, onSignOut }: DashboardProps) {
+  const [tripToDelete, setTripToDelete] = useState<string | null>(null);
+
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50">
+      {/* ... previous header ... */}
       <header className="bg-white/80 backdrop-blur-md border-b border-zinc-200 px-8 h-16 flex items-center justify-between shrink-0 sticky top-0 z-50">
         <div className="flex items-center gap-3">
           <div className="bg-zinc-900 w-8 h-8 rounded-lg flex items-center justify-center">
@@ -33,13 +39,25 @@ export function Dashboard({ trips, onSelectTrip, onCreateNew, onDeleteTrip, user
           <h1 className="text-sm font-bold text-zinc-900 uppercase tracking-tighter">MyTripPlanner</h1>
         </div>
         <div className="flex items-center gap-4">
-          <div className="text-right hidden sm:block">
-            <p className="text-[10px] font-bold text-zinc-900 leading-none">{userEmail?.split('@')[0]}</p>
-            <button onClick={onSignOut} className="text-[9px] font-bold text-zinc-400 hover:text-red-500 uppercase tracking-widest mt-1">Sign Out</button>
-          </div>
-          <div className="w-8 h-8 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden">
-            <span className="text-[10px] font-bold text-zinc-500">{userEmail?.[0].toUpperCase()}</span>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger render={
+              <Button variant="ghost" className="relative h-10 w-10 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden p-0">
+                <span className="text-xs font-bold text-zinc-600">{userEmail?.[0].toUpperCase()}</span>
+              </Button>
+            } />
+            <DropdownMenuContent className="w-56" align="end">
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">{userEmail?.split('@')[0]}</p>
+                  <p className="text-xs leading-none text-muted-foreground">{userEmail}</p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={onSignOut} className="text-red-600 font-bold focus:text-red-600 cursor-pointer">
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
@@ -109,19 +127,36 @@ export function Dashboard({ trips, onSelectTrip, onCreateNew, onDeleteTrip, user
                     Open Planner <ArrowRight className="w-3.5 h-3.5" />
                   </Button>
                   {onDeleteTrip && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (confirm("Are you sure you want to delete this trip?")) {
-                          onDeleteTrip(trip.id!);
-                        }
-                      }}
-                      className="h-8 w-8 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-lg"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <Dialog open={tripToDelete === trip.id} onOpenChange={(open) => !open && setTripToDelete(null)}>
+                      <DialogTrigger render={
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setTripToDelete(trip.id!);
+                          }}
+                          className="h-8 w-8 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-lg"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      } />
+                      <DialogContent onClick={(e) => e.stopPropagation()}>
+                        <DialogHeader>
+                          <DialogTitle>Delete Trip</DialogTitle>
+                          <DialogDescription>
+                            Are you sure you want to delete your trip to <strong>{trip.destination}</strong>? This action cannot be undone.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setTripToDelete(null)}>Cancel</Button>
+                          <Button variant="destructive" onClick={() => {
+                            onDeleteTrip(trip.id!);
+                            setTripToDelete(null);
+                          }}>Delete</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                   )}
                 </CardFooter>
               </Card>
